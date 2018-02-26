@@ -68,7 +68,7 @@ def signal_time_table(dir, user, hand, signal_name ):
      del time_raw[len(time_raw) - 1]
 
 
-     df = pandas.DataFrame({'Raw': signal_raw, 'Time': time_raw})
+     df = pandas.DataFrame({signal_name: signal_raw, 'Time': time_raw})
 
      df.to_csv(dir + user + hand + '/' + table_name, index=0)
 
@@ -77,8 +77,8 @@ if __name__ == '__main__':
     dir = "C:\Users\user\Desktop\Pilot_Study/"
     user = 'u001/'
 
-    #signals = ['EDA', 'BVP', 'HR', 'TEMP','ACC']
-    signals = ['ACC']
+    signals = ['EDA', 'BVP', 'HR', 'TEMP','ACC']
+    #signals = ['ACC']
 
     hands = ['right','left']
     for p in range(0,len(signals)):
