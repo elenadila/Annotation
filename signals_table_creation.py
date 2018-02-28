@@ -13,7 +13,7 @@ from pandas import DataFrame # In order to write into the .csv file we can use t
 import os
 import matplotlib.pyplot as plt
 
-
+# Extract the signal from the signal.csv file
 def signal_extraction(path):
     signal = [];
 
@@ -24,13 +24,11 @@ def signal_extraction(path):
             signal.append(', '.join(row))
     return signal
 
-
+# Extract the timestamp and convert it into the Time considering the sampling rate of the signals. signal is the array.
 def time_extraction(signal, signal_name):
    # i = 0
     time = []
 
-    print "signal"
-    print signal
     sample_rate = 0
     if signal_name == 'EDA':
         sample_rate = 4.0
@@ -40,19 +38,21 @@ def time_extraction(signal, signal_name):
         sample_rate = 64.0
     if signal_name == 'HR':
         sample_rate = 1.0
-
     if signal_name == 'ACC':
         sample_rate = 32.0
 
-
+    # Create the Time series
     for cont in range(0,len(signal)):
          time.append(datetime.fromtimestamp(float(signal[0])) + timedelta(minutes=float((cont/sample_rate)/60)))  #the time is expressed in minutes
 
     return time
 
+
+# Create the table for each signal. At the beginning just signal and time.
 def signal_time_table(dir, user, hand, signal_name ):
     table_name = signal_name + '_' + 'Table.csv'
     acc = pandas.DataFrame()
+
     if signal_name == 'ACC':
         acc = pandas.read_csv(dir + user + hand + '/' + signal_name + '.csv', header=None)
         time_raw = time_extraction(acc.iloc[:,0], signal_name)
@@ -88,9 +88,6 @@ def signal_time_table(dir, user, hand, signal_name ):
         df_ibi = pandas.DataFrame({'IBI':ibi.iloc[:,1], 'Time':time})
         df_ibi = df_ibi.drop(df_ibi.index[0:2])
         df_ibi.to_csv(dir + user + hand + '/' + table_name, index=0)
-
-
-
 
     else:
 
