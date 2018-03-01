@@ -6,15 +6,17 @@ def interval(time, beg, en):
     j = 0;
     interv = [];
     time = pd.to_datetime(time)
+   # print "time"
 
     for j in range(len(time)):
-
-        if time[j] == pd.to_datetime(beg):
+       # print j
+        #print time[j]
+        if time[j] == beg:
             beginning = j
 
-        if time[j] == pd.to_datetime(en):
+        if time[j] == en:
             end = j
-            print end
+          #  print end
             break
 
 
@@ -24,7 +26,8 @@ def interval(time, beg, en):
 # Extracts the interval of interest from the dataframe
 def part_div(edaframe, time, start, end):
     part = pd.DataFrame()
-
+    start = pd.to_datetime(start)
+    end = pd.to_datetime(end)
     try:
      interv = interval(time, start, end)  # extract the interval of interest from the time
      part = edaframe[interv[0]:interv[1]]
@@ -35,6 +38,7 @@ def part_div(edaframe, time, start, end):
        print "exc"
        try:
         interv = interval(time, start, end + timedelta(seconds=1))
+        part = edaframe[interv[0]:interv[1]]
        except UnboundLocalError:
         print "deleted"
         part = pd.DataFrame()
@@ -42,3 +46,23 @@ def part_div(edaframe, time, start, end):
     return part
 
 
+# Extract the signal expressed from type based on the start and end timestamp in the experiment file
+# If type = baseline_1, it extracts the first baseline signal
+def signal_extraction_experiment_info(signal_table_path, signal_name, info_file_path, type):
+    # Read the signal table and extract only the raw and the time
+    signal_db = pd.read_csv(signal_table_path)
+    signal_db_new = pd.DataFrame()
+    signal_db_new[signal_name] = signal_db[signal_name]
+    signal_db_new['Time'] = signal_db['Time']
+
+    # Read the experiment info and extract start and end of the baseline_1 type
+    info = pd.read_excel(info_file_path)
+    duration = info[info['type'].isin([type])]
+
+    start = pd.to_datetime(duration.start)
+    end = pd.to_datetime(duration.end)
+
+    # Segment the dataframe based on those values
+    segment = part_div(signal_db_new, signal_db_new.Time, start[0], end[0])
+
+    return segment

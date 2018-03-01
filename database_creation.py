@@ -43,9 +43,9 @@ def create_feature_from_segment(segment_traces, function):
 
 
 # Add the feature_array to the database
-def add_feature_to_db(user_dir,hand, feature_name, feature_column):
-    db = check_create_db(user_dir,  hand + '_Database.csv')
-    db_path = user_dir + hand + '_Database.csv'
+def add_feature_to_db(user_dir,hand, feature_name, feature_column,signal_name):
+    db = check_create_db(user_dir,  hand + '_' + signal_name+ '_Database.csv')
+    db_path = user_dir + hand + '_' + signal_name+ '_Database.csv'
     # Checks whether the columns already exists
     if feature_name in db.columns:
        db[feature_name] = feature_column
@@ -85,16 +85,20 @@ if __name__ == '__main__':
     for p in range(0, len(signals)):
         for j in range(0, len(hands)):
             [t, s, e ,id, d] = segment_episodes(dir, user, hands[j], signals[p], laughter_annotation_file)
-            # add_feature_to_db(user_loc, hands[j], 'start', s)
-            # add_feature_to_db(user_loc, hands[j], 'end', e)
-            # add_feature_to_db(user_loc, hands[j], 'laugter_id', id)
-            # add_feature_to_db(user_loc, hands[j],'duration', d)
-            # add_feature_to_db(user_loc, hands[j],'hand', hands[j])
-            # add_feature_to_db(user_loc, hands[j], 'user_ID', [user[0:len(user)-1]]*len(s))
-            mean = create_feature_from_segment(t,np.mean)
-            add_feature_to_db(user_loc,hands[j],'mean_' + signals[p],mean)
+            print t
+            print t
+            print np.mean(d)
+            add_feature_to_db(user_loc, hands[j], 'start', s,'Laughter')
+            add_feature_to_db(user_loc, hands[j], 'end', e,'Laughter')
+            add_feature_to_db(user_loc, hands[j], 'laugter_id', id,'Laughter')
+            add_feature_to_db(user_loc, hands[j],'duration', d,'Laughter')
+            add_feature_to_db(user_loc, hands[j],'hand', hands[j],'Laughter')
+            add_feature_to_db(user_loc, hands[j], 'user_ID', [user[0:len(user)-1]]*len(s),'Laughter')
+            add_feature_to_db(user_loc, hands[j], 'type', ['laughter'] * len(s),'Laughter')
+            mean = create_feature_from_segment(t,np.mean,)
+            add_feature_to_db(user_loc,hands[j],'mean_' + signals[p],mean,'Laughter')
             std = create_feature_from_segment(t, np.std)
-            add_feature_to_db(user_loc, hands[j], 'std_' + signals[p], std)
+            add_feature_to_db(user_loc, hands[j], 'std_' + signals[p], std,'Laughter')
 
 
 
