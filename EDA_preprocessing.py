@@ -77,7 +77,7 @@ def filtering_bartlett(sig, win_size):
 
 if __name__ == '__main__':
     dir = "C:\Users\user\Desktop\Pilot_Study/"
-    user = 'u001/'
+    user = 'u003/'
 
     signals = 'EDA_Table.csv'
     # signals = ['ACC']

@@ -12,10 +12,11 @@ def annotation_conversion(filename):
 
 # Look whether in a folder there is a video and if it is, return the filename without extension,
 # This corresponds to the beginning of the video expressed as: ddmmyyhhmmss
-def video_name_converter(dirpath):
+def video_name_converter(dir):
  for subdir, dirs, files in os.walk(dir):
      for file in files:
-        if (file.endswith(".mp4")):
+     #   print file
+        if (file.endswith(".MP4")):
             os.path.splitext(file)
             filename = os.path.splitext(file)[0]
  return filename
@@ -40,6 +41,7 @@ def filename_converter(dir_path):
 def annotation_time_converter(directory, filepath):
     db = annotation_conversion(filepath)
     day_ex = filename_converter(directory)
+    print day_ex
     start = db['start'].values
     end = db['end'].values
     start_converted = []
@@ -60,7 +62,7 @@ def annotation_time_converter(directory, filepath):
 
 if __name__ == '__main__':
     dir = "C:\Users\user\Desktop\Pilot_Study/"
-    file = 'additional_annotation.txt'
-    user = 'u001/'
+    file = 'laughter_annotation.txt'
+    user = 'u003/'
 
-    annotation_time_converter(dir,dir + user + file)
+    annotation_time_converter(dir + user ,dir + user + file)

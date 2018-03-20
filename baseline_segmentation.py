@@ -6,17 +6,24 @@ from matplotlib import pyplot as plt
 from database_creation import add_feature_to_db
 from database_creation import create_feature_from_segment, segment_episodes
 from datetime import timedelta
-# Counts the number of laughter episodes
+
+# Counts the number of laughter episodes from the laughter_annotation.txt file
 def num_episodes(laughter_file):
     annotation_db = pd.read_csv(laughter_file,delimiter="\t")
     n_episodes = len(annotation_db.duration.values)
     return n_episodes
 
-# Generate
-def random_segment(trace, signal_name, seed):
-    random.seed(seed)
-    beg_segm = random.randint(0,len(trace))
+# Generate segments from the signal. The beginning of the segment is randomly selected. The seed for the random is incremented every
+#time a new segment is generated. In this way we should be sure that the all the signals baseline segments are computed from the same segment.
+# window_length is the number of seconds we want for the segments
+def random_segment(trace, signal_name, seed, window_length):
+  #  random.seed(seed)
+
+    beg_segm = random.randint(0,len(trace)) # randomly generate the beg of the segment
+
     len_interval = 0
+    print trace
+    # Check the signal and adjust the interval len based on the sampling rate of each signal
     if signal_name == 'EDA':
         len_interval = 4
     if signal_name == 'TEMP':
@@ -28,45 +35,84 @@ def random_segment(trace, signal_name, seed):
     if signal_name == 'ACC':
         len_interval = 32
 
-   # if signal_name == 'IBI':
-    #    len_interval = 1
+    end_segm = beg_segm + len_interval * window_length
 
-    end_segm = beg_segm + len_interval*3
- #   print beg_segm
-   # print end_segm
+    try:
+     b = pd.to_datetime(trace.Time.iloc[beg_segm])
 
+     leng = float( (pd.to_datetime(trace.Time.iloc[end_segm])  - b).total_seconds())
+    except IndexError:
+        print "E1"
+        beg_segm = random.randint(0,len(trace))
+        end_segm = beg_segm + len_interval * window_length
+
+
+        b = pd.to_datetime(trace.Time.iloc[beg_segm])
+
+        leng = float((pd.to_datetime(trace.Time.iloc[end_segm]) - b).total_seconds())
+
+    print "LENGHT"
+    print leng
+    while (leng > 4.0):
+        beg_segm = random.randint(0,len(trace)-1)
+        end_segm = beg_segm + len_interval * window_length
+
+        print "OK"
+ #   if end_segm - beg_segm > 4:
+    # Extract the Time Series of the interval of interest
+        try:
+         b = pd.to_datetime(trace.Time.iloc[beg_segm])
+         print b
+         leng = float((pd.to_datetime(trace.Time.iloc[end_segm]) - b).total_seconds())
+         print leng
+        except IndexError:
+            print "ERROR"
+
+
+            beg_segm = random.randint(0, len(trace) - window_length*len_interval)
+            end_segm = beg_segm + len_interval * window_length
+
+
+            b = pd.to_datetime(trace.Time.iloc[beg_segm])
+            print b
+            print trace.Time
+            leng = float((pd.to_datetime(trace.Time.iloc[end_segm]) - b).total_seconds())
+            print leng
     time_segm = trace.Time.iloc[beg_segm:end_segm]
+    print "LAST"
+    print time_segm
+  # We have to consider the IBI separately since it does not have a sampling rate
+  #   if signal_name == 'IBI':
+  #       time_segm_start = trace.Time.iloc[beg_segm]
+  #       # for the end of the segment we consider the timestamp, from it we have then to extract the indices
+  #       time_segm_end = str(pd.to_datetime(time_segm_start) + timedelta(seconds= window_length))
+  #       time_array = trace.Time.values
+  #       # extract the index of the end timestamp
+  #       for cont in range(0, len(time_array)):
+  #           if time_array[cont] == time_segm_end:
+  #            end_segm = cont
+  #
+  #      # Extract the Time Series of the segment
+  #       time_segm = trace.Time.iloc[beg_segm:end_segm]
 
-
-    if signal_name == 'IBI':
-        time_segm_start = trace.Time.iloc[beg_segm]
-        time_segm_end = str(pd.to_datetime(time_segm_start) + timedelta(seconds=3))
-        time_array = trace.Time.values
-        for cont in range(0, len(time_array)):
-            if time_array[cont] == time_segm_end:
-             end_segm = cont
-
-       # end_segm = trace.Time.index()
-        time_segm = trace.Time.iloc[beg_segm:end_segm]
-
+    # If the it is empty, try to change the beginning of the segment and run again the previous procedure until the segment is not empty
     while time_segm.empty:
+        print "EMPTY"
         beg_segm = random.randint(0, len(trace))
-
-        time_segm_start = trace.Time.iloc[beg_segm]
-        time_segm_end = str(pd.to_datetime(time_segm_start) + timedelta(seconds=3))
+        try:
+         time_segm_start = trace.Time.iloc[beg_segm]
+        except IndexError:
+            print "E3"
+        time_segm_end = str(pd.to_datetime(time_segm_start) + timedelta(seconds= window_length))
         time_array = trace.Time.values
         for cont in range(0, len(time_array)):
             if time_array[cont] == time_segm_end:
                 end_segm = cont
 
-                # end_segm = trace.Time.index()
-            time_segm = trace.Time.iloc[beg_segm:end_segm]
-#    print len(trace.Time.values)
+                time_segm = trace.Time.iloc[beg_segm:end_segm]
         print time_segm
-#print len(time_segm)
 
-
-    return time_segm
+    return [time_segm, beg_segm,end_segm]
 
 
 # Create all the segments
@@ -80,16 +126,25 @@ def random_segments(num_episodes, sign_name, signal_table_path,sign_bas ):
     segm =0
     start_random = []
     end_random = []
+    segm_index = []
     for i in range(0, num_episodes):
-        segm = random_segment(sign_bas, sign_name,i)
+       # #for j in range(1, len(num_episodes())):
+       # sign_bas = sign_bas[start_random[i]:end_random[i]]
+        [segm, b, e] = random_segment(sign_bas, sign_name,i, 3)
+        sign_bas = sign_bas.drop(sign_bas.index[b:e])
+        ### TODO: exclude the already used intervals from the dataframe: sign_bas.iloc[b:e] is the already used dataset
 
+        print " TEST"
+        print sign_bas.drop(sign_bas.index[b:e])
         rand_segm = segmentation.part_div(signal_db_new, signal_db_new.Time, segm.iloc[0], segm.iloc[len(segm)-1])
 
             #  print len(rand_segm)
         start_random.append(segm.iloc[0])
         end_random.append(segm.iloc[len(segm)-1])
         random_traces.append(rand_segm[sign_name])
-        print rand_segm[sign_name]
+        segm_index.append(segm)
+  #  print "index"
+   # print segm_index
     return [random_traces, start_random, end_random]
 
 
@@ -98,7 +153,9 @@ def random_segments(num_episodes, sign_name, signal_table_path,sign_bas ):
 if __name__ == '__main__':
     dir = "C:\Users\user\Desktop\Pilot_Study/"
     user = 'u001/'
-    signals = ['EDA', 'BVP', 'HR', 'TEMP', 'ACC', 'IBI']
+    signals = ['EDA', 'BVP', 'HR', 'TEMP', 'ACC']
+    #components = ['EDA', 'BVP', 'HR', 'TEMP', 'ACC', 'IBI']
+
     hands = ['right', 'left']
     laughter_annotation_file = '/laughter_annotation.txt'
     user_loc = dir + user

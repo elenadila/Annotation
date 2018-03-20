@@ -61,9 +61,10 @@ def check_create_db(dirpath, filename):
             datab = pd.read_csv(dirpath + filename)
             print 'found'
  else:
-            datab = pd.DataFrame({'user_id':[]})
+         #   datab = pd.DataFrame({'user_id':[]})
+            datab = pd.DataFrame({'random': []})
             datab.to_csv(filename, index=0)
-            datab = pd.read_csv(filename)
+           # datab = pd.read_csv(filename)
             print 'not-found'
  return datab
 
