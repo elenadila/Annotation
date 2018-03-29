@@ -5,6 +5,12 @@ import time
 from os.path import basename
 import os
 import math
+
+"""
+    Methods for the conversion of the timestamp from the ANVIL timestamps
+"""
+
+
 # Convert the annotation table got from ANVIL into a DataFrame
 def annotation_conversion(filename):
   df = pd.read_csv(filename,delimiter="\t")
