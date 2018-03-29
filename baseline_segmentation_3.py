@@ -1,11 +1,15 @@
 import numpy as np
 import pandas as pd
-import database_creation
 import segmentation
 import random
 from datetime import timedelta
-import math
-import os
+
+"""
+    Methods for creating the baseline
+"""
+
+
+
 # Clean the Experiment_DataFrame from the required segments, specified by start and end
 def clean_signal(dataframe_to_clean, start_seg, end_segm, duration):
     old = pd.DataFrame()
@@ -101,36 +105,38 @@ if __name__ == '__main__':
              laughter_annotation_file = 'laughter_annotation.txt'
              additional_annotation_file = 'additional_annotation.txt'
              user_loc = dir + user[u]
-             # [t, s, e, id, d, type] = database_creation.segment_episodes(dir, user[u], hands[j], signals, components[comp],
-             #                                          laughter_annotation_file)
+
+             # Read the additional_annotation file to get the timestamp of movements to eliminate
+             # from the analysis
 
              df_additional = pd.read_csv(dir + user[u] + additional_annotation_file, delimiter="\t")
              s_add = df_additional['start_converted'].values
              e_add = df_additional['end_converted'].values
              d_add = df_additional['duration_converted'].values
              id_add = df_additional['ID'].values
-             # token = df_additional[df_additional['token'] == 'cognitive_load'].token
-             # print token
 
+             # Read the laughte_annotation file to eliminate the laughter episodes
              df_laughter = pd.read_csv(dir + user[u] + laughter_annotation_file, delimiter="\t")
              s = df_laughter['start_converted']
              e = df_laughter['end_converted']
              d = df_laughter['duration_converted']
 
-
+             # read the experiment info file to eliminate the segment from clapping to cognitive load
              df_info = pd.read_csv(dir + user[u] + "experiment_info.csv")
              start = pd.to_datetime(df_info[df_info['type'] == 'clapping'].start)
-             # start = pd.to_datetime(',2018-03-09 12:03:43')
              end = pd.to_datetime(df_info[df_info['type'] == 'cognitive_load'].end)
-
              start = start.iloc[0]
              end = end.iloc[0]
 
 
 
-
+             # Upload the data frame correspondent to the experiment
              df_signal = pd.read_csv(dir + user[u] + hands[j] + '/' + signals + '_Table_Experiment.csv')
 
+
+             # concat to the start and end timestamp of the additional_annotation
+             # the one got from the experiment_info (clapping + baseline)
+             # and the laughter episodes
              s_add= np.insert(pd.to_datetime(s_add),1,pd.to_datetime(start))
              e_add= np.insert(pd.to_datetime(e_add),1,pd.to_datetime(end))
 
@@ -138,51 +144,30 @@ if __name__ == '__main__':
              e_add = np.concatenate((pd.to_datetime(e_add), (pd.to_datetime(e)+ timedelta(seconds=5))))
 
 
-             print "SADD"
-             print pd.to_datetime(s_add)
-
-         #    df_signal = pd.concat([df_signal,to_remove]).drop_duplicates(keep=False)
-         #
-         #     [db_cleaned_add, dur_cleaned_add] = clean_signal(df_signal, pd.to_datetime(s_add),
-         #                                                      pd.to_datetime(e_add),
-         #                                                      d_add)
-         #     #
-         #     db_cleaned_add.to_csv(dir + user[u] + hands[j] + '/Test.csv',index=0)
-         #     db_cleaned_add = pd.read_csv(dir + user[u] + hands[j] + '/Test.csv')
-         #     os.remove(dir + user[u] + hands[j] + '/Test.csv')
-
-
-
-
-
-             # [db_cleaned_laughter, dur_cleaned_laughter] = clean_signal(db_cleaned_add,pd.to_datetime(s),
-             #                                                            pd.to_datetime(e) + timedelta(seconds=5),
-             #                                                            d )
-             #
-
-
-
-
+             # Clean the datafram using the start and end timestamp arrays just created
+             # IMPORTANT: the duration should be the duration array of the laughter file
+             # since its length determines the number of segment to generate from the baseline
              [db_cleaned_laughter, dur_cleaned_laughter] = clean_signal(df_signal,s_add,
                                                                        e_add ,
                                                                         d )
 
-             db_cleaned_laughter.to_csv(dir + user[u] + hands[j] + '/Test.csv', index=0)
-
+             #db_cleaned_laughter.to_csv(dir + user[u] + hands[j] + '/Test.csv', index=0)
+             # Check if the generated timestamps are or not in the cleaned signal
+             # if yes print NOOOOO
              for i in range(0,len(e_add)):
                 if (pd.to_datetime(db_cleaned_laughter.Time) == pd.to_datetime(e_add[i])).any():
                     print "NOOOOOOOOO"
                     print e_add[i]
 
-
+             # Create the baseline segments from the cleaned db
              [start_baseline, end_baseline, dur_baseline]= create_baseline_segments(db_cleaned_laughter, dur_cleaned_laughter)
+
+             # Annotate the information of the baseline segments generated in the file baseline_additional_removed
              baseline_db = pd.DataFrame({'start_converted':start_baseline,'end_converted':end_baseline, 'duration_converted':dur_baseline,
                                          'ID':id,
                                          'type': ['baseline_additional_removed']*len(start_baseline)})
              baseline_db.to_csv(dir + user[u] + 'baseline_additional_removed.txt', sep="\t", index=0)
-          #   dataframe_to_clean = pd.concat([df_signal, t]).drop_duplicates(keep=False)
 
-#    print dataframe_to_clean['Time']
 
 
 
