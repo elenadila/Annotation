@@ -1,5 +1,7 @@
 import pandas as pd
-
+"""
+    This module allows the segmentation of dataframes based on timestamp 
+"""
 # Returns the index related to the beg and end timestamp desired
 def interval(time, beg, en):
     j = 0
