@@ -2,6 +2,12 @@ from EDA_preprocessing import *
 import Peak_detection
 from scipy import stats
 
+"""
+    Methods for extracting features from EDA
+"""
+
+
+
 def peak_detection(signal):
     indices = Peak_detection.indexes(signal, thres=0.01, min_dist=4)
     x = indices
