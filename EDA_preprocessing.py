@@ -12,6 +12,11 @@ import pandas
 from pandas import DataFrame # In order to write into the .csv file we can use the pandas module
 import os
 import matplotlib.pyplot as plt
+import scipy.signal as scisig
+import pandas as pd
+from segmentation import part_div
+
+
 
 # This function extracts EDA values from the csv file.
 # The input of the function is the path of the file.
@@ -43,8 +48,10 @@ def normalization(sig):
     min_val = min(sig)
     max_val = max(sig)
 
-    for i in range(len(sig)):
-        normalized.append(((sig[i] - np.mean(sig)) / (max_val - min_val)))
+    for i in range(0,len(sig)):
+
+        normalized.append(((sig[i] - min_val) / (max_val - min_val)))
+    #normalized.append(np.mean(normalized))
     return normalized
 
 def decomposition(eda, Fs):
@@ -74,20 +81,51 @@ def filtering_bartlett(sig, win_size):
     filtered = signal.convolve(sig, win, mode='same') / sum(win)
     return filtered
 
+def butter_lowpass(cutoff, fs, order=5):
+    # Filtering Helper functions
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = scisig.butter(order, normal_cutoff, btype='low', analog=False)
+    return b, a
+
+
+def butter_lowpass_filter(data, cutoff, fs, order=5):
+    # Filtering Helper functions
+    b, a = butter_lowpass(cutoff, fs, order=order)
+    y = scisig.lfilter(b, a, data)
+    return y
 
 if __name__ == '__main__':
     dir = "C:\Users\user\Desktop\Pilot_Study/"
-    user = 'u003/'
-
+    user = ['u001/', 'u002/', 'u003/', 'u004/', 'u005/', 'u006/','u008/']
+ #   user = ['u008/']
     signals = 'EDA_Table.csv'
-    # signals = ['ACC']
+    output = 'EDA_Table_Experiment.csv'
+
 
     hands = ['right/', 'left/']
+    for participant in range(0,len(user)):
+      for j in range(0, len(hands)):
+            eda_table = pandas.read_csv(dir + user[participant] + hands[j] + signals)
 
-    for j in range(0, len(hands)):
-            db = pandas.read_csv(dir + user + hands[j] + signals)
+            filename = dir + user[participant] + 'experiment_info.csv'
+            df_info = pd.read_csv(filename)
+            start = pd.to_datetime(df_info[df_info['type'] == 'experiment'].start)
+           # end = pd.to_datetime(df_info[df_info['type'] == 'experiment'].end)
+            end = pd.to_datetime(df_info.end_from_registration)
 
-            [r, p, t, l, d, e, obj] = decomposition(db.EDA, 4)
-            db['Phasic'] = r
-            db['Tonic'] = t
-            db.to_csv(dir + user + hands[j] + signals, index=0)
+
+            start = start.iloc[0]
+            end = end.iloc[0]
+
+            eda_experiment = part_div(eda_table, eda_table.Time, start, end)
+
+            print user[participant], hands[j]
+            filtered = butter_lowpass_filter(eda_experiment['EDA'], 1.0, 8, 6)
+            eda_experiment['EDA_Filtered'] = filtered
+            [r, p, t, l, d, e, obj] = decomposition(eda_experiment.EDA, 4)
+            eda_experiment['Phasic'] = normalization(r)
+            eda_experiment['Tonic'] = normalization(t)
+            eda_experiment['Normalized'] = normalization(filtered)
+
+            eda_experiment.to_csv(dir + user[participant] + hands[j] + output, index=0)

@@ -47,10 +47,17 @@ def reconstruct_video_info(dir, user):
 
 if __name__ == '__main__':
     dir = "C:\Users\user\Desktop\Pilot_Study/"
-    user = ['u001/', 'u002/', 'u003/', 'u004/', 'u005/', 'u006/']
-
+ #   user = ['u001/', 'u002/', 'u003/', 'u004/', 'u005/', 'u006/']
+    user = ['u008/']
+    registration_all = pd.read_csv(dir + 'registration_information_all_users.csv')
     for i in range(0,len(user)):
        # Create an empty experiment_info file for each user
        datab = pd.DataFrame({'random': []})
+       print registration_all[registration_all['user_id']==user[i][0:4]].start_timestamp
+       datab['start_from_registration'] = [registration_all[registration_all['user_id']==user[i][0:4]].start_timestamp.iloc[0]]
+       datab['end_from_registration'] =  [registration_all[registration_all['user_id']==user[i][0:4]].end_timestamp.iloc[0]]
+
        datab.to_csv(dir + user[i] + "experiment_info.csv", index=0)
        reconstruct_video_info(dir,user[i])
+
+    print datab

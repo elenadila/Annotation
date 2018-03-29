@@ -1,21 +1,23 @@
 import pandas as pd
-from datetime import timedelta
 
 # Returns the index related to the beg and end timestamp desired
 def interval(time, beg, en):
-    j = 0;
-    interv = [];
+    j = 0
+
     time = pd.to_datetime(time)
+    beg = pd.to_datetime(beg)
+    en = pd.to_datetime(en)
    # print "time"
 
     for j in range(len(time)):
        # print j
         #print time[j]
-        if time[j] == beg:
+        if pd.Timestamp(time[j]) == beg:
             beginning = j
 
-        if time[j] == en:
-            end = j
+        if pd.Timestamp(time[j]) == en:
+            end = j + 1
+         #   print time[j]
           #  print end
             break
 
@@ -31,13 +33,13 @@ def part_div(edaframe, time, start, end):
     try:
      interv = interval(time, start, end)  # extract the interval of interest from the time
      part = edaframe[interv[0]:interv[1]]
-
+     print part
     # Check whether there is an exception: e.g. whether the end is not present in the df. In that case try
-    # again end + 1 sec. If it still does not work return an empty df
+    # again. If it still does not work return an empty df
     except UnboundLocalError:
        print "exc"
        try:
-        interv = interval(time, start, end + timedelta(seconds=1))
+        interv = interval(time, start, end )
         part = edaframe[interv[0]:interv[1]]
        except UnboundLocalError:
         print "deleted"

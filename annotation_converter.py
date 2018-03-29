@@ -4,7 +4,7 @@ import datetime
 import time
 from os.path import basename
 import os
-
+import math
 # Convert the annotation table got from ANVIL into a DataFrame
 def annotation_conversion(filename):
   df = pd.read_csv(filename,delimiter="\t")
@@ -41,17 +41,25 @@ def filename_converter(dir_path):
 def annotation_time_converter(directory, filepath):
     db = annotation_conversion(filepath)
     day_ex = filename_converter(directory)
+    dur = (db['duration'])
+    print dur
     print day_ex
     start = db['start'].values
     end = db['end'].values
     start_converted = []
     end_converted = []
+    duration_converted = []
     for i in range(0, len(start)):
-        start_converted.append((day_ex + timedelta(seconds=start[i])).strftime("%Y-%m-%d %H:%M:%S"))
-        end_converted.append((day_ex + timedelta(seconds=end[i])).strftime("%Y-%m-%d %H:%M:%S"))
-
+        # Round the timestamp to the nearest second
+        start_converted.append(pd.Timestamp((day_ex + timedelta(seconds=start[i]))).round('1s'))
+        end_converted.append(pd.Timestamp(day_ex + timedelta(seconds=end[i])).round('1s'))
+        duration_converted.append((end_converted[i]-start_converted[i]).total_seconds())
+    print duration_converted
     db['start_converted'] = start_converted
     db['end_converted'] = end_converted
+    db['duration_converted'] = duration_converted
+    # Add to the file a timestamp corresponding to the beg of the segm + 5 seconds
+    db['end_converted_5_sec'] = (pd.to_datetime(start_converted) + timedelta(seconds=5))
 
     db.to_csv(filepath, sep="\t", index=0)
 
@@ -62,7 +70,13 @@ def annotation_time_converter(directory, filepath):
 
 if __name__ == '__main__':
     dir = "C:\Users\user\Desktop\Pilot_Study/"
-    file = 'laughter_annotation.txt'
-    user = 'u003/'
+    file = 'baseline_additional_removed.txt'
+    dir = "C:\Users\user\Desktop\Pilot_Study/"
+    signals = ['EDA', 'BVP', 'HR', 'TEMP', 'ACC', 'IBI']
+    user = ['u001/', 'u002/', 'u003/', 'u004/', 'u005/', 'u008/']
+    for participant in range(0, len(user)):
+        db_ann = pd.read_csv(dir + user[participant] + file,delimiter="\t")
+        start_converted = db_ann['start_converted']
+        db_ann['end_converted_5_sec'] = (pd.to_datetime(start_converted) + timedelta(seconds=5))
+        db_ann.to_csv(dir + user[participant] + file, sep="\t", index=0)
 
-    annotation_time_converter(dir + user ,dir + user + file)

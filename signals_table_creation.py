@@ -57,25 +57,26 @@ def signal_time_table(dir, user, hand, signal_name ):
         acc = pandas.read_csv(dir + user + hand + '/' + signal_name + '.csv', header=None)
         time_raw = time_extraction(acc.iloc[:,0], signal_name)
         acc = acc.drop(acc.index[0:2])
-        df = pandas.DataFrame(acc)
+        # scale the data between +- 2g
+        df = pandas.DataFrame(acc/64.0)
         del time_raw[len(time_raw) - 1]
         del time_raw[len(time_raw) - 1]
 
         df['Time'] = time_raw
-        acc_mean = []
-        avg = []
-        for i in range(0,len(time_raw)-1):
-            acc_mean.append(max(np.abs(df.iloc[i,0] - df.iloc[i-1,0]),
-                                    np.abs((df.iloc[i,1] - df.iloc[i-1,1])),
-                                   np.abs(df.iloc[i,2] - df.iloc[i-1,2])))
-            mean = np.mean([df.iloc[i,0],df.iloc[i,1],df.iloc[i,2]])
-            avg.append(mean* 0.9 + (acc_mean[i] / 32) * 0.1)
-
-        acc_mean.append(0)
-
-
-
-        df['ACC'] = acc_mean
+        # acc_mean = []
+        # avg = []
+        # for i in range(0,len(time_raw)-1):
+        #     acc_mean.append(max(np.abs(df.iloc[i,0] - df.iloc[i-1,0]),
+        #                             np.abs((df.iloc[i,1] - df.iloc[i-1,1])),
+        #                            np.abs(df.iloc[i,2] - df.iloc[i-1,2])))
+        #     mean = np.mean([df.iloc[i,0],df.iloc[i,1],df.iloc[i,2]])
+        #     avg.append(mean* 0.9 + (acc_mean[i] / 32) * 0.1)
+        #
+        # acc_mean.append(0)
+        #
+        #
+        #
+        # df['ACC'] = acc_mean
         df.to_csv(dir + user + hand + '/' + table_name, index=0)
 
     elif signal_name == 'IBI':
