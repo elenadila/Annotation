@@ -6,6 +6,8 @@ import experiment_info
 import pandas as pd
 if __name__ == '__main__':
 
+ "TEST"
+
     dir = "C:\Users\user\Desktop\Pilot_Study/"
     signals = ['EDA', 'BVP', 'HR', 'TEMP', 'ACC', 'IBI']
     user = ['u001/', 'u002/', 'u003/', 'u004/', 'u005/', 'u008/']
